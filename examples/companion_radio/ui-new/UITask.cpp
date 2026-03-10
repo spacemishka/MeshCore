@@ -23,6 +23,10 @@
   #define UI_RECENT_LIST_SIZE 4
 #endif
 
+#ifndef UI_HAS_OTA_MENU
+  #define UI_HAS_OTA_MENU 0
+#endif
+
 #if UI_HAS_JOYSTICK
   #define PRESS_LABEL "press Enter"
 #else
@@ -81,6 +85,9 @@ class HomeScreen : public UIScreen {
     RECENT,
     RADIO,
     BLUETOOTH,
+  #if UI_HAS_OTA_MENU == 1
+     OTA,
+  #endif
     ADVERT,
 #if ENV_INCLUDE_GPS == 1
     GPS,
@@ -277,6 +284,13 @@ public:
           32, 32);
       display.setTextSize(1);
       display.drawTextCentered(display.width() / 2, 64 - 11, "toggle: " PRESS_LABEL);
+  #if UI_HAS_OTA_MENU == 1
+      } else if (_page == HomePage::OTA) {
+        display.setColor(DisplayDriver::GREEN);
+        display.drawXbm((display.width() - 32) / 2, 18, power_icon, 32, 32);
+        display.setTextSize(1);
+        display.drawTextCentered(display.width() / 2, 64 - 11, "OTA DFU: " PRESS_LABEL);
+  #endif
     } else if (_page == HomePage::ADVERT) {
       display.setColor(DisplayDriver::GREEN);
       display.drawXbm((display.width() - 32) / 2, 18, advert_icon, 32, 32);
@@ -425,6 +439,12 @@ public:
       }
       return true;
     }
+  #if UI_HAS_OTA_MENU == 1
+      if (c == KEY_ENTER && _page == HomePage::OTA) {
+        _task->triggerOTA();
+        return true;
+      }
+  #endif
     if (c == KEY_ENTER && _page == HomePage::ADVERT) {
       _task->notify(UIEventType::ack);
       if (the_mesh.advert()) {
@@ -865,6 +885,12 @@ char UITask::handleLongPress(char c) {
     the_mesh.enterCLIRescue();
     c = 0;   // consume event
   }
+#if UI_HAS_OTA_MENU
+  else {
+    triggerOTA();   // long press after startup -> enter BLE OTA mode
+    c = 0;
+  }
+#endif
   return c;
 }
 
@@ -916,6 +942,24 @@ void UITask::toggleGPS() {
       }
     }
   }
+}
+
+void UITask::triggerOTA() {
+  notify(UIEventType::ack);
+  showAlert("Restarting for OTA...", 1500);
+  _next_refresh = 0;
+
+  delay(500);  // allow screen to update before reset
+
+  char reply[96] = {0};
+  const char* ota_id = (_node_prefs && _node_prefs->node_name[0]) ? _node_prefs->node_name : "MESHCORE_OTA";
+
+  // startOTAUpdate writes GPREGRET=0xA8 and calls NVIC_SystemReset() — does not return.
+  // If it does return, something went wrong.
+  if (!_board->startOTAUpdate(ota_id, reply)) {
+    showAlert(reply[0] ? reply : "OTA start failed", 3000);
+  }
+  _next_refresh = 0;
 }
 
 void UITask::toggleBuzzer() {
