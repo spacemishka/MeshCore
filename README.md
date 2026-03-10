@@ -18,6 +18,20 @@ MeshCore provides the ability to create wireless mesh networks, similar to Mesht
 * Low Power Consumption – Ideal for battery-powered or solar-powered devices.
 * Simple to Deploy – Pre-built example applications make it easy to get started.
 
+## 🎮 Button Gestures (ThinkNode M1 Companion)
+
+The function button (P1.07) on ThinkNode M1 companion firmware supports multiple gestures:
+
+| Gesture | Action |
+|---------|--------|
+| **Single click** | Next menu page |
+| **Double click** | Previous menu page |
+| **Triple click** | Toggle buzzer |
+| **Long press (first 8s)** | CLI rescue mode (for recovery) |
+| **Long press (after 8s)** | Enter BLE OTA mode (wireless firmware update) |
+
+When OTA mode is triggered, the device advertises as `THINKNODE_M1_OTA` via Bluetooth and can be updated using the nRF Device Firmware Update (nRF DFU) app on Android/iOS.
+
 ## 🎯 What Can You Use MeshCore For?
 
 * Off-Grid Communication: Stay connected even in remote areas.
