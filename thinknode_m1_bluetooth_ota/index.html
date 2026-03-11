@@ -1,0 +1,1458 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the open source MeshCore firmware">
+      
+      
+      
+        <link rel="canonical" href="https://meshcore-dev.github.io/meshcore/thinknode_m1_bluetooth_ota/">
+      
+      
+        <link rel="prev" href="../terminal_chat_cli/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+    
+    
+      
+        <title>Thinknode M1 Bluetooth OTA Update Guide - MeshCore Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../_stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#thinknode-m1-bluetooth-ota-update-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="MeshCore Docs" class="md-header__button md-logo" aria-label="MeshCore Docs" data-md-component="logo">
+      
+  <img src="../_assets/meshcore_tm.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            MeshCore Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Thinknode M1 Bluetooth OTA Update Guide
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/meshcore-dev/meshcore/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    meshcore-dev/meshcore
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="MeshCore Docs" class="md-nav__button md-logo" aria-label="MeshCore Docs" data-md-component="logo">
+      
+  <img src="../_assets/meshcore_tm.svg" alt="logo">
+
+    </a>
+    MeshCore Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/meshcore-dev/meshcore/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    meshcore-dev/meshcore
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_commands/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Commands
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../companion_protocol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Companion Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frequently Asked Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kiss_modem_protocol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MeshCore KISS Modem Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nrf52_power_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nRF52 Power Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../packet_format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Packet Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payloads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Payload Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../qr_codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QR Codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stats_binary_frames/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stats Binary Frame Structures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terminal_chat_cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Terminal Chat CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Thinknode M1 Bluetooth OTA Update Guide
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Thinknode M1 Bluetooth OTA Update Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prerequisites
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hardware-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hardware Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-update-firmware-via-bluetooth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to Update Firmware via Bluetooth
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How to Update Firmware via Bluetooth">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-download-firmware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Download Firmware
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-enable-ota-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Enable OTA Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-flash-firmware-with-nrf-dfu-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Flash Firmware with nRF DFU App
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#device-not-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Device Not Found
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-fails-or-times-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update Fails or Times Out
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#device-wont-enter-ota-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Device Won't Enter OTA Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-completes-but-device-doesnt-boot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update Completes but Device Doesn't Boot
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#technical-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Technical Details
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Technical Details">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ota-update-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OTA Update Process
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#board-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Board Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Implementation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ble-cli-firmware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BLE CLI Firmware
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BLE CLI Firmware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Features:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#building-ble-cli-firmware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building BLE CLI Firmware:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-ble-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using BLE CLI:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prerequisites
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hardware-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hardware Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-update-firmware-via-bluetooth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to Update Firmware via Bluetooth
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How to Update Firmware via Bluetooth">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-download-firmware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Download Firmware
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-enable-ota-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Enable OTA Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-flash-firmware-with-nrf-dfu-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Flash Firmware with nRF DFU App
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#device-not-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Device Not Found
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-fails-or-times-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update Fails or Times Out
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#device-wont-enter-ota-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Device Won't Enter OTA Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-completes-but-device-doesnt-boot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update Completes but Device Doesn't Boot
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#technical-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Technical Details
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Technical Details">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ota-update-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OTA Update Process
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#board-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Board Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Implementation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ble-cli-firmware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BLE CLI Firmware
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BLE CLI Firmware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Features:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#building-ble-cli-firmware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building BLE CLI Firmware:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-ble-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using BLE CLI:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/meshcore-dev/meshcore/edit/main/docs/thinknode_m1_bluetooth_ota.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="thinknode-m1-bluetooth-ota-update-guide">Thinknode M1 Bluetooth OTA Update Guide</h1>
+<h2 id="overview">Overview</h2>
+<p>The Thinknode M1 board has built-in support for Bluetooth Over-The-Air (OTA) firmware updates using the Nordic nRF52840's Device Firmware Update (DFU) protocol. This allows you to wirelessly update the firmware without needing a USB connection.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Thinknode M1 board with MeshCore firmware installed</li>
+<li>Smartphone (Android or iOS) with Bluetooth</li>
+<li><strong>nRF Device Firmware Update</strong> app installed:</li>
+<li><a href="https://apps.apple.com/app/nrf-device-firmware-update/id1624454660">iOS App Store</a></li>
+<li><a href="https://play.google.com/store/apps/details?id=no.nordicsemi.android.dfu">Google Play Store</a></li>
+<li>Firmware ZIP file for Thinknode M1 (download from <a href="https://flasher.meshcore.co.uk">flasher.meshcore.co.uk</a>)</li>
+</ul>
+<h2 id="hardware-configuration">Hardware Configuration</h2>
+<p>The Thinknode M1 is configured with the following OTA-capable components:</p>
+<ul>
+<li><strong>MCU</strong>: nRF52840</li>
+<li><strong>Bootloader</strong>: Adafruit nRF52 Bootloader with DFU support</li>
+<li><strong>SoftDevice</strong>: S140 v6.1.1</li>
+<li><strong>Bluetooth</strong>: BLE 5.0</li>
+<li><strong>OTA Name</strong>: <code>THINKNODE_M1_OTA</code></li>
+</ul>
+<h2 id="how-to-update-firmware-via-bluetooth">How to Update Firmware via Bluetooth</h2>
+<h3 id="step-1-download-firmware">Step 1: Download Firmware</h3>
+<ol>
+<li>Visit <a href="https://flasher.meshcore.co.uk">flasher.meshcore.co.uk</a></li>
+<li>Find the Thinknode M1 section</li>
+<li>Download the <strong>ZIP</strong> version of your desired firmware (companion, repeater, or room server)</li>
+<li>Transfer the ZIP file to your smartphone</li>
+</ol>
+<h3 id="step-2-enable-ota-mode">Step 2: Enable OTA Mode</h3>
+<p><strong>Method 1: Using BLE CLI Firmware (RECOMMENDED - Fully Wireless)</strong></p>
+<p>The easiest way to enable OTA mode wirelessly is to flash the special BLE CLI firmware:</p>
+<ol>
+<li>Flash the <code>ThinkNode_M1_ble_cli</code> firmware to your device (via USB one time)</li>
+<li>The device will advertise as <code>THINKNODE_M1_CLI</code></li>
+<li>Connect using a Bluetooth terminal app:</li>
+<li><strong>Android</strong>: Serial Bluetooth Terminal, BlueTerm</li>
+<li><strong>iOS</strong>: nRF UART, BlueTerm</li>
+<li>Or use nRF Connect app → UART service</li>
+<li>Type <code>start ota</code> and press Enter</li>
+<li>Device will restart and advertise as <code>THINKNODE_M1_OTA</code></li>
+<li>Proceed to Step 3 to flash your desired firmware</li>
+</ol>
+<p><strong>Method 2: For Companion Radio (BLE or USB) - Via USB Serial</strong></p>
+<p>The companion firmware does not expose a command line interface through the MeshCore app. You need to use a USB serial connection:</p>
+<ol>
+<li>Connect your Thinknode M1 to a computer via USB-C cable</li>
+<li>Open the <a href="https://flasher.meshcore.co.uk">MeshCore Web Flasher</a></li>
+<li>Click <strong>Console</strong> and select the serial port for your device</li>
+<li>Type <code>start ota</code> and press Enter</li>
+<li>You should see <code>OK</code> confirmation</li>
+<li>Disconnect the USB cable</li>
+<li>The device will restart in OTA mode and be discoverable as <code>THINKNODE_M1_OTA</code></li>
+</ol>
+<p><strong>Alternative USB Serial Tools:</strong></p>
+<p>Some users may prefer to use a serial terminal application:
+- <strong>Windows</strong>: PuTTY, TeraTerm, or Arduino Serial Monitor
+- <strong>Mac/Linux</strong>: screen, minicom, or Arduino Serial Monitor
+- <strong>Settings</strong>: 115200 baud, 8N1</p>
+<p><strong>Method 3: For Repeater/Room Server (Remote Administration)</strong></p>
+<p>If you have remote administration access (via T-Deck or MeshCore app):</p>
+<ol>
+<li>Connect to the repeater/room server remotely via the MeshCore app</li>
+<li>Login with admin credentials</li>
+<li>Go to the Command Line tab</li>
+<li>Type <code>start ota</code> and press Enter</li>
+<li>Wait for confirmation that OTA mode is enabled</li>
+<li>The device will restart in OTA mode and be discoverable as <code>THINKNODE_M1_OTA</code></li>
+</ol>
+<h3 id="step-3-flash-firmware-with-nrf-dfu-app">Step 3: Flash Firmware with nRF DFU App</h3>
+<ol>
+<li>Open the <strong>nRF Device Firmware Update</strong> app on your smartphone</li>
+<li>Tap the <strong>Settings</strong> icon (gear) in the top right corner</li>
+<li>Enable <strong>Packets receipt notifications</strong></li>
+<li>Set <strong>Number of Packets</strong> to <code>8</code> (recommended for Thinknode M1)</li>
+<li>You can try values between 8-10 if you experience issues</li>
+<li>Go back to the main screen</li>
+<li>Tap <strong>Select Device</strong></li>
+<li>Look for <code>THINKNODE_M1_OTA</code> in the list of available devices</li>
+<li>If not found, enable <strong>Force Scanning</strong> in Settings</li>
+<li>Select <code>THINKNODE_M1_OTA</code></li>
+<li>Tap <strong>Select File</strong> and choose the firmware ZIP you downloaded</li>
+<li>Tap <strong>Upload</strong> to begin the update</li>
+<li>Wait for the update to complete (typically 2-5 minutes)</li>
+<li>The device will automatically reboot with the new firmware</li>
+</ol>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="device-not-found">Device Not Found</h3>
+<ul>
+<li>Ensure the device entered OTA mode successfully (check for <code>OK</code> response)</li>
+<li>Make sure Bluetooth is enabled on your smartphone</li>
+<li>Try toggling Bluetooth off and on</li>
+<li>Enable <strong>Force Scanning</strong> in the nRF DFU app settings</li>
+<li>Move closer to the device (within 3-5 feet)</li>
+</ul>
+<h3 id="update-fails-or-times-out">Update Fails or Times Out</h3>
+<ul>
+<li>Try reducing the <strong>Number of Packets</strong> value (try 6 or 4)</li>
+<li>Ensure the device has sufficient battery (above 30%)</li>
+<li>Restart your smartphone's Bluetooth</li>
+<li>Reboot your smartphone if issues persist</li>
+<li>Make sure you're using the correct firmware ZIP for Thinknode M1</li>
+</ul>
+<h3 id="device-wont-enter-ota-mode">Device Won't Enter OTA Mode</h3>
+<ul>
+<li><strong>For Companion Radio</strong>: Make sure you're using a USB serial connection to send the <code>start ota</code> command, not the MeshCore app</li>
+<li><strong>For Repeater/Room Server</strong>: Check that you have admin access and are logged in remotely</li>
+<li>Verify you have the correct firmware version that supports the <code>start ota</code> command</li>
+<li>Try resetting the device and attempting again</li>
+<li>Check serial console for error messages</li>
+</ul>
+<h3 id="update-completes-but-device-doesnt-boot">Update Completes but Device Doesn't Boot</h3>
+<ul>
+<li>The enhanced DFU bootloader will automatically fall back to OTA mode if firmware is invalid</li>
+<li>Try flashing again via Bluetooth</li>
+<li>If still failing, connect via USB and use the web flasher</li>
+</ul>
+<h2 id="technical-details">Technical Details</h2>
+<h3 id="ota-update-process">OTA Update Process</h3>
+<p>When you execute the <code>start ota</code> command:</p>
+<ol>
+<li>The device configures Bluetooth with maximum bandwidth</li>
+<li>Bluefruit library initializes with optimized connection parameters</li>
+<li>BLE DFU service starts and becomes discoverable</li>
+<li>The device advertises as <code>THINKNODE_M1_OTA</code></li>
+<li>The nRF DFU app connects and transfers the new firmware</li>
+<li>The bootloader validates and installs the firmware</li>
+<li>The device reboots automatically with the new firmware</li>
+</ol>
+<h3 id="board-configuration">Board Configuration</h3>
+<p>The Thinknode M1 board JSON includes these OTA-critical settings:</p>
+<pre><code class="language-json">{
+  &quot;connectivity&quot;: [&quot;bluetooth&quot;],
+  &quot;upload&quot;: {
+    &quot;protocol&quot;: &quot;nrfutil&quot;,
+    &quot;protocols&quot;: [&quot;jlink&quot;, &quot;nrfjprog&quot;, &quot;nrfutil&quot;, &quot;stlink&quot;],
+    &quot;use_1200bps_touch&quot;: true,
+    &quot;require_upload_port&quot;: true,
+    &quot;wait_for_upload_port&quot;: true
+  },
+  &quot;bootloader&quot;: {
+    &quot;settings_addr&quot;: &quot;0xFF000&quot;
+  },
+  &quot;softdevice&quot;: {
+    &quot;sd_name&quot;: &quot;s140&quot;,
+    &quot;sd_version&quot;: &quot;6.1.1&quot;
+  }
+}
+</code></pre>
+<h3 id="code-implementation">Code Implementation</h3>
+<p>The Thinknode M1 inherits OTA functionality from the <code>NRF52Board</code> base class:</p>
+<pre><code class="language-cpp">class ThinkNodeM1Board : public NRF52Board {
+public:
+  ThinkNodeM1Board() : NRF52Board(&quot;THINKNODE_M1_OTA&quot;) {}
+  // ... other methods
+};
+</code></pre>
+<p>The <code>startOTAUpdate()</code> method is implemented in <code>NRF52Board.cpp</code> and handles all BLE DFU initialization.</p>
+<h2 id="ble-cli-firmware">BLE CLI Firmware</h2>
+<p>For users who frequently update firmware via Bluetooth OTA, a special lightweight <strong>BLE CLI firmware</strong> is available. This firmware provides wireless CLI access without needing USB connections.</p>
+<h3 id="features">Features:</h3>
+<ul>
+<li>Connect via Bluetooth terminal app</li>
+<li>Issue commands wirelessly: <code>start ota</code>, <code>info</code>, <code>reboot</code></li>
+<li>Lightweight and fast boot</li>
+<li>Perfect for OTA updates</li>
+</ul>
+<h3 id="building-ble-cli-firmware">Building BLE CLI Firmware:</h3>
+<pre><code class="language-bash"># Using PlatformIO
+pio run -e ThinkNode_M1_ble_cli
+
+# Upload via USB (one time)
+pio run -e ThinkNode_M1_ble_cli -t upload
+</code></pre>
+<p>The firmware will be available at: <code>.pio/build/ThinkNode_M1_ble_cli/firmware.zip</code></p>
+<h3 id="using-ble-cli">Using BLE CLI:</h3>
+<ol>
+<li>Flash the BLE CLI firmware once via USB</li>
+<li>Device advertises as <code>THINKNODE_M1_CLI</code></li>
+<li>Connect using any Bluetooth terminal app</li>
+<li>Available commands:</li>
+<li><code>start ota</code> - Enter OTA update mode</li>
+<li><code>info</code> - Show device information</li>
+<li><code>help</code> - Show command list</li>
+<li><code>reboot</code> - Reboot device</li>
+</ol>
+<h2 id="best-practices">Best Practices</h2>
+<ol>
+<li><strong>Always download the ZIP firmware</strong> - The nRF DFU app requires ZIP format</li>
+<li><strong>Ensure good battery</strong> - Low battery during update can cause failures</li>
+<li><strong>Stay close to device</strong> - Maintain short distance (&lt; 5 feet) during update</li>
+<li><strong>Don't interrupt</strong> - Let the entire update complete without intervention</li>
+<li><strong>Verify version</strong> - After update, check firmware version to confirm success</li>
+</ol>
+<h2 id="references">References</h2>
+<ul>
+<li><a href="https://github.com/meshcore-dev/MeshCore">MeshCore Main Documentation</a></li>
+<li><a href="../docs/faq.md#71-q-how-to-update-nrf-rak-t114-seed-xiao-repeater-and-room-server-firmware-over-the-air-using-the-new-simpler-dfu-app">MeshCore FAQ - OTA Updates</a></li>
+<li><a href="https://infocenter.nordicsemi.com/topic/sdk_nrf5_v17.1.0/lib_dfu_transport_ble.html">Nordic nRF DFU Documentation</a></li>
+<li><a href="https://github.com/adafruit/Adafruit_nRF52_Bootloader">Adafruit Bluefruit nRF52 Bootloader</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.action.edit", "content.code.copy", "search.highlight", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
