@@ -1,4 +1,4 @@
-name: Build ThinkNode M1 Companion Firmwares
+name: Build ThinkNode M1 Companion OTA Firmware
 
 permissions:
   contents: write
