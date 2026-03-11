@@ -4,6 +4,8 @@ permissions:
   contents: write
 
 on:
+  release:
+    types: [created, published]
   workflow_dispatch:
   push:
     tags:
