@@ -31,12 +31,3 @@ jobs:
         with:
           name: companion-firmwares
           path: out
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          name: Companion Firmware ${{ env.GIT_TAG_VERSION }}
-          body: ""
-          draft: true
-          files: out/*
