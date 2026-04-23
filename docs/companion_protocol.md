@@ -1,22 +1,21 @@
-# Companion Protocol
+# Companion Protocol Reference
 
-- **Last Updated**: 2026-03-08
+- **Last Updated**: 2026-04-23
 - **Protocol Version**: Companion Firmware v1.12.0+
+- **Latest Protocol Version Code**: 3 (with SNR headers for messages)
 
-> NOTE: This document is still in development. Some information may be inaccurate.
+This document is the **protocol reference guide** for MeshCore companion apps communicating over Bluetooth Low Energy (BLE).
 
-This document provides a comprehensive guide for communicating with MeshCore devices over Bluetooth Low Energy (BLE).
+For **detailed endpoint specifications** (command payloads, binary schemas, response formats), see [Bluetooth Data Endpoints](./bluetooth_data_endpoints.md).
 
-It is platform-agnostic and can be used for Android, iOS, Python, JavaScript, or any other platform that supports BLE.
-
-## Official Libraries
-
-Please see the following repos for existing MeshCore Companion Protocol libraries.
-
+For **existing SDK libraries**, see:
 - JavaScript: [https://github.com/meshcore-dev/meshcore.js](https://github.com/meshcore-dev/meshcore.js)
 - Python: [https://github.com/meshcore-dev/meshcore_py](https://github.com/meshcore-dev/meshcore_py)
+- TypeScript: See `meshcore_ts/` folder in this repository
 
-## Important Security Note
+For **example implementations**, see `examples/companion_radio/` in this repository.
+
+## Security Notice
 
 All secrets, hashes, and cryptographic values shown in this guide are example values only.
 
@@ -24,19 +23,31 @@ All secrets, hashes, and cryptographic values shown in this guide are example va
 - Never use example secrets in production
 - Always generate new cryptographically secure random secrets
 - Please implement proper security practices in your implementation
-- This guide is for protocol documentation only
 
 ## Table of Contents
 
-1. [BLE Connection](#ble-connection)
-2. [Packet Structure](#packet-structure)
-3. [Commands](#commands)
-4. [Channel Management](#channel-management)
-5. [Message Handling](#message-handling)
-6. [Response Parsing](#response-parsing)
-7. [Example Implementation Flow](#example-implementation-flow)
-8. [Best Practices](#best-practices)
-9. [Troubleshooting](#troubleshooting)
+1. [Quick Reference](#quick-reference)
+2. [BLE Connection](#ble-connection)
+3. [Packet Structure](#packet-structure)
+4. [Endpoint Reference Matrix](#endpoint-reference-matrix)
+5. [Startup Sequence](#startup-sequence)
+6. [Implementation Guidelines](#implementation-guidelines)
+7. [Troubleshooting](#troubleshooting)
+
+---
+
+## Quick Reference
+
+| What | Value |
+|------|-------|
+| Service UUID | `6E400001-B5A3-F393-E0A9-E50E24DCCA9E` |
+| RX Characteristic (write) | `6E400002-B5A3-F393-E0A9-E50E24DCCA9E` |
+| TX Characteristic (notify) | `6E400003-B5A3-F393-E0A9-E50E24DCCA9E` |
+| Max Frame Size | 172 bytes |
+| Byte Order | Little-endian (all multi-byte integers) |
+| String Encoding | UTF-8 |
+| Pairing Security | MITM protected with PIN |
+| Command Sequencing | One command in-flight at a time |
 
 ---
 
@@ -44,7 +55,7 @@ All secrets, hashes, and cryptographic values shown in this guide are example va
 
 ### Service and Characteristics
 
-MeshCore Companion devices expose a BLE service with the following UUIDs:
+MeshCore exposes a Nordic UART style BLE service:
 
 - **Service UUID**: `6E400001-B5A3-F393-E0A9-E50E24DCCA9E`
 - **RX Characteristic** (App → Firmware): `6E400002-B5A3-F393-E0A9-E50E24DCCA9E`
@@ -52,466 +63,332 @@ MeshCore Companion devices expose a BLE service with the following UUIDs:
 
 ### Connection Steps
 
-1. **Scan for Devices**
-    - Scan for BLE devices advertising the MeshCore Service UUID
-    - Optionally filter by device name (typically contains "MeshCore" prefix)
-    - Note the device MAC address for reconnection
+1. **Scan & Connect**: Find device advertising the service UUID, establish BLE connection
+2. **Discover**: Find service and both characteristics
+3. **Subscribe**: Enable notifications on TX characteristic
+4. **Send**: Now ready to send commands via RX characteristic
 
-2. **Connect to GATT**
-    - Connect to the device using the discovered MAC address
-    - Wait for connection to be established
+### Platform-Specific Notes
 
-3. **Discover Services and Characteristics**
-    - Discover the service with UUID `6E400001-B5A3-F393-E0A9-E50E24DCCA9E`
-    - Discover the RX characteristic `6E400002-B5A3-F393-E0A9-E50E24DCCA9E`
-        - Your app writes to this, the firmware reads from this
-    - Discover the TX characteristic `6E400003-B5A3-F393-E0A9-E50E24DCCA9E`
-        - The firmware writes to this, your app reads from this
+**Android**:
+- Use `BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT` for reliable writes
+- Request MTU of 512 bytes if available
 
-4. **Enable Notifications**
-    - Subscribe to notifications on the TX characteristic to receive data from the firmware
+**iOS**:
+- Use `CBCharacteristicWriteType.withResponse` for reliability
+- Check `maximumWriteValueLength` for write sizing
 
-5. **Send Initial Commands**
-    - Send `CMD_APP_START` to identify your app to firmware and get radio settings
-    - Send `CMD_DEVICE_QEURY` to fetch device info and negotiate supported protocol versions
-    - Send `CMD_SET_DEVICE_TIME` to set the firmware clock
-    - Send `CMD_GET_CONTACTS` to fetch all contacts
-    - Send `CMD_GET_CHANNEL` multiple times to fetch all channel slots
-    - Send `CMD_SYNC_NEXT_MESSAGE` to fetch the next message stored in firmware
-    - Setup listeners for push codes, such as `PUSH_CODE_MSG_WAITING` or `PUSH_CODE_ADVERT`
-    - See [Commands](#commands) section for information on other commands
+**Python (bleak)**:
+- MTU negotiated automatically
+- Use `write_gatt_char(char_uuid, data, response=True)`
 
-**Note**: MeshCore devices may disconnect after periods of inactivity. Implement auto-reconnect logic with exponential backoff.
+**JavaScript/Web Bluetooth**:
+- MTU typically 512 bytes
+- Handle notifications via `characteristic.oncharacteristicvaluechanged`
 
-### BLE Write Type
+### MTU and Frame Sizing
 
-When writing commands to the RX characteristic, specify the write type:
+- Default BLE MTU is 23 bytes (20 bytes payload)
+- Large commands like `SET_CHANNEL` require MTU negotiation
+- Always validate frame size ≤ 172 bytes before write
+- Android/iOS typically support MTU 512; web browsers vary
 
-- **Write with Response** (default): Waits for acknowledgment from device
-- **Write without Response**: Faster but no acknowledgment
+### Connection Loss & Reconnection
 
-**Platform-specific**:
-
-- **Android**: Use `BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT` or `WRITE_TYPE_NO_RESPONSE`
-- **iOS**: Use `CBCharacteristicWriteType.withResponse` or `.withoutResponse`
-- **Python (bleak)**: Use `write_gatt_char()` with `response=True` or `False`
-
-**Recommendation**: Use write with response for reliability.
-
-### MTU (Maximum Transmission Unit)
-
-The default BLE MTU is 23 bytes (20 bytes payload). For larger commands like `SET_CHANNEL` (50 bytes), you may need to:
-
-1. **Request Larger MTU**: Request MTU of 512 bytes if supported
-    - Android: `gatt.requestMtu(512)`
-    - iOS: `peripheral.maximumWriteValueLength(for:)`
-    - Python (bleak): MTU is negotiated automatically
-
-### Command Sequencing
-
-**Critical**: Commands must be sent in the correct sequence:
-
-1. **After Connection**:
-    - Wait for BLE connection to be established
-    - Wait for services/characteristics to be discovered
-    - Wait for notifications to be enabled
-    - Now you can safely send commands to the firmware
-
-2. **Command-Response Matching**:
-    - Send one command at a time
-    - Wait for a response before sending another command
-    - Use a timeout (typically 5 seconds)
-    - Match response to command by type (e.g: `CMD_GET_CHANNEL` → `RESP_CODE_CHANNEL_INFO`)
-
-### Command Queue Management
-
-For reliable operation, implement a command queue.
-
-**Queue Structure**:
-
-- Maintain a queue of pending commands
-- Track which command is currently waiting for a response
-- Only send next command after receiving response or timeout
-
-**Error Handling**:
-
-- On timeout, clear current command, process next in queue
-- On error, log error, clear current command, process next
+- MeshCore devices may disconnect after inactivity (typically 5–10 minutes)
+- Implement auto-reconnect with exponential backoff
+- Use connection state listeners to detect loss
 
 ---
 
 ## Packet Structure
 
-The MeshCore protocol uses a binary format with the following structure:
+The protocol uses binary frames with the following structure:
 
-- **Commands**: Sent from app to firmware via RX characteristic
-- **Responses**: Received from firmware via TX characteristic notifications
-- **All multi-byte integers**: Little-endian byte order (except CayenneLPP which is Big-endian)
-- **All strings**: UTF-8 encoding
-
-Most packets follow this format:
 ```
-[Packet Type (1 byte)] [Data (variable length)]
+[Frame Type (1 byte)] [Data (variable length)]
 ```
 
-The first byte indicates the packet type (see [Response Parsing](#response-parsing)).
+**Frame Types**:
+- **Command**: sent from app to firmware (codes 0x01–0x3D)
+- **Response**: sent from firmware in reply (codes 0x00–0x1A)
+- **Push**: sent asynchronously from firmware (codes 0x80–0x90)
+
+**Byte Order**: All multi-byte integers are **little-endian** unless noted.
+
+**Strings**: Encoded as UTF-8, either null-terminated or fixed-width with null padding.
 
 ---
 
-## Commands
+## Endpoint Reference Matrix
 
-### 1. App Start
+This section provides the authoritative listing of all commands, responses, and push codes.
 
-**Purpose**: Initialize communication with the device. Must be sent first after connection.
+For **complete binary field layouts**, see [Bluetooth Data Endpoints](./bluetooth_data_endpoints.md).
 
-**Command Format**:
-```
-Byte 0: 0x01
-Bytes 1-7: Reserved (currently ignored by firmware)
-Bytes 8+: Application name (UTF-8, optional)
-```
+### App → Device Commands (0x01–0x3D)
 
-**Example** (hex):
-```
-01 00 00 00 00 00 00 00 6d 63 63 6c 69
-```
+| Code | Name | Purpose |
+|------|------|---------|
+| 0x01 | CMD_APP_START | Initialize companion app; identify app name |
+| 0x02 | CMD_SEND_TXT_MSG | Send text message to contact |
+| 0x03 | CMD_SEND_CHANNEL_TXT_MSG | Send text message to channel |
+| 0x04 | CMD_GET_CONTACTS | Fetch all or recently modified contacts |
+| 0x05 | CMD_GET_DEVICE_TIME | Get device's current time (unix seconds) |
+| 0x06 | CMD_SET_DEVICE_TIME | Set device time |
+| 0x07 | CMD_SEND_SELF_ADVERT | Broadcast self advertisement |
+| 0x08 | CMD_SET_ADVERT_NAME | Set device's advertised name |
+| 0x09 | CMD_ADD_UPDATE_CONTACT | Add or update contact record |
+| 0x0A | CMD_SYNC_NEXT_MESSAGE | Fetch next queued message |
+| 0x0B | CMD_SET_RADIO_PARAMS | Configure radio frequency/bandwidth/spreading |
+| 0x0C | CMD_SET_RADIO_TX_POWER | Set radio transmit power (dBm) |
+| 0x0D | CMD_RESET_PATH | Clear routing path for contact |
+| 0x0E | CMD_SET_ADVERT_LATLON | Set device's advertised GPS location |
+| 0x0F | CMD_REMOVE_CONTACT | Delete contact |
+| 0x10 | CMD_SHARE_CONTACT | Share contact with peer |
+| 0x11 | CMD_EXPORT_CONTACT | Export contact in serialized format |
+| 0x12 | CMD_IMPORT_CONTACT | Import contact from blob |
+| 0x13 | CMD_REBOOT | Reboot device |
+| 0x14 | CMD_GET_BATT_AND_STORAGE | Query battery voltage and storage |
+| 0x15 | CMD_SET_TUNING_PARAMS | Set RX/airtime tuning parameters |
+| 0x16 | CMD_DEVICE_QUERY | GET device capabilities and protocol version |
+| 0x17 | CMD_EXPORT_PRIVATE_KEY | Export device's private key (if permitted) |
+| 0x18 | CMD_IMPORT_PRIVATE_KEY | Import private key (if permitted) |
+| 0x19 | CMD_SEND_RAW_DATA | Send raw data with routing path |
+| 0x1A | CMD_SEND_LOGIN | Send login request to contact |
+| 0x1B | CMD_SEND_STATUS_REQ | Request status from contact |
+| 0x1C | CMD_HAS_CONNECTION | Check if path exists to contact |
+| 0x1D | CMD_LOGOUT | Log out from contact |
+| 0x1E | CMD_GET_CONTACT_BY_KEY | Fetch single contact by public key |
+| 0x1F | CMD_GET_CHANNEL | Get channel configuration by index |
+| 0x20 | CMD_SET_CHANNEL | Create/update channel (supports 16-byte secret) |
+| 0x21 | CMD_SIGN_START | Start signing operation |
+| 0x22 | CMD_SIGN_DATA | Feed data chunks to signing |
+| 0x23 | CMD_SIGN_FINISH | Complete signing, retrieve signature |
+| 0x24 | CMD_SEND_TRACE_PATH | Send path discovery trace |
+| 0x25 | CMD_SET_DEVICE_PIN | Set BLE pairing PIN |
+| 0x26 | CMD_SET_OTHER_PARAMS | Set misc device parameters |
+| 0x27 | CMD_SEND_TELEMETRY_REQ | Request telemetry from contact (legacy) |
+| 0x28 | CMD_GET_CUSTOM_VARS | Fetch all custom variables |
+| 0x29 | CMD_SET_CUSTOM_VAR | Set custom variable (key:value) |
+| 0x2A | CMD_GET_ADVERT_PATH | Get path to advertiser |
+| 0x2B | CMD_GET_TUNING_PARAMS | Get current RX/airtime tuning values |
+| 0x32 | CMD_SEND_BINARY_REQ | Send binary request to contact |
+| 0x33 | CMD_FACTORY_RESET | Factory reset device |
+| 0x34 | CMD_SEND_PATH_DISCOVERY_REQ | Send path discovery request |
+| 0x36 | CMD_SET_FLOOD_SCOPE | Set flood scope / transport key |
+| 0x37 | CMD_SEND_CONTROL_DATA | Send control data |
+| 0x38 | CMD_GET_STATS | Retrieve statistics |
+| 0x39 | CMD_SEND_ANON_REQ | Send anonymous request |
+| 0x3A | CMD_SET_AUTOADD_CONFIG | Configure auto-add settings |
+| 0x3B | CMD_GET_AUTOADD_CONFIG | Get auto-add configuration |
+| 0x3C | CMD_GET_ALLOWED_REPEAT_FREQ | Get allowed repeat frequency range |
+| 0x3D | CMD_SET_PATH_HASH_MODE | Set path hashing mode |
 
-**Response**: `PACKET_SELF_INFO` (0x05)
+**Reserved/Unused**: 0x2C–0x31, 0x35
 
----
+### Device → App Responses (0x00–0x1A)
 
-### 2. Device Query
+| Code | Name | Purpose |
+|------|------|---------|
+| 0x00 | RESP_CODE_OK | Generic success (no data) |
+| 0x01 | RESP_CODE_ERR | Error response with error code |
+| 0x02 | RESP_CODE_CONTACTS_START | Start of contact list (with count) |
+| 0x03 | RESP_CODE_CONTACT | Single contact record |
+| 0x04 | RESP_CODE_END_OF_CONTACTS | End of contact list |
+| 0x05 | RESP_CODE_SELF_INFO | Device's own info and capabilities |
+| 0x06 | RESP_CODE_SENT | Message sent confirmation with tag/timeout |
+| 0x07 | RESP_CODE_CONTACT_MSG_RECV | Contact message (legacy, no SNR) |
+| 0x08 | RESP_CODE_CHANNEL_MSG_RECV | Channel message (legacy, no SNR) |
+| 0x09 | RESP_CODE_CURR_TIME | Current device time |
+| 0x0A | RESP_CODE_NO_MORE_MESSAGES | End of message queue |
+| 0x0B | RESP_CODE_EXPORT_CONTACT | Exported contact blob |
+| 0x0C | RESP_CODE_BATT_AND_STORAGE | Battery voltage and storage usage |
+| 0x0D | RESP_CODE_DEVICE_INFO | Device capabilities and build info |
+| 0x0E | RESP_CODE_PRIVATE_KEY | Exported private key blob |
+| 0x0F | RESP_CODE_DISABLED | Feature disabled |
+| 0x10 | RESP_CODE_CONTACT_MSG_RECV_V3 | Contact message (V3 with SNR header) |
+| 0x11 | RESP_CODE_CHANNEL_MSG_RECV_V3 | Channel message (V3 with SNR header) |
+| 0x12 | RESP_CODE_CHANNEL_INFO | Channel configuration |
+| 0x13 | RESP_CODE_SIGN_START | Signing started, max length set |
+| 0x14 | RESP_CODE_SIGNATURE | Signed data (64-byte signature) |
+| 0x15 | RESP_CODE_CUSTOM_VARS | Custom variables (CSV format) |
+| 0x16 | RESP_CODE_ADVERT_PATH | Path to advertiser |
+| 0x17 | RESP_CODE_TUNING_PARAMS | Device's RX/airtime tuning values |
+| 0x18 | RESP_CODE_STATS | Statistics payload |
+| 0x19 | RESP_CODE_AUTOADD_CONFIG | Auto-add configuration |
+| 0x1A | RESP_ALLOWED_REPEAT_FREQ | Allowed repeat frequency range |
 
-**Purpose**: Query device information.
+**Error Codes** (byte 1 when code is 0x01):
+- 0x01: Unsupported command
+- 0x02: Not found
+- 0x03: Table full
+- 0x04: Bad state
+- 0x05: File I/O error
+- 0x06: Illegal argument
 
-**Command Format**:
-```
-Byte 0: 0x16
-Byte 1: 0x03
-```
+### Device → App Push Events (0x80–0x90)
 
-**Example** (hex):
-```
-16 03
-```
+These arrive asynchronously, without a pending command.
 
-**Response**: `PACKET_DEVICE_INFO` (0x0D) with device information
-
----
-
-### 3. Get Channel Info
-
-**Purpose**: Retrieve information about a specific channel.
-
-**Command Format**:
-```
-Byte 0: 0x1F
-Byte 1: Channel Index (0-7)
-```
-
-**Example** (get channel 1):
-```
-1F 01
-```
-
-**Response**: `PACKET_CHANNEL_INFO` (0x12) with channel details
-
----
-
-### 4. Set Channel
-
-**Purpose**: Create or update a channel on the device.
-
-**Command Format**:
-```
-Byte 0: 0x20
-Byte 1: Channel Index (0-7)
-Bytes 2-33: Channel Name (32 bytes, UTF-8, null-padded)
-Bytes 34-49: Secret (16 bytes)
-```
-
-**Total Length**: 50 bytes
-
-**Channel Index**:
-- Index 0: Reserved for public channels (no secret)
-- Indices 1-7: Available for private channels
-
-**Channel Name**:
-- UTF-8 encoded
-- Maximum 32 bytes
-- Padded with null bytes (0x00) if shorter
-
-**Secret Field** (16 bytes):
-- For **private channels**: 16-byte secret
-- For **public channels**: All zeros (0x00)
-
-**Example** (create channel "YourChannelName" at index 1 with secret):
-```
-20 01 53 4D 53 00 00 ... (name padded to 32 bytes)
-    [16 bytes of secret]
-```
-
-**Note**: The 32-byte secret variant is unsupported and returns `PACKET_ERROR`.
-
-**Response**: `PACKET_OK` (0x00) on success, `PACKET_ERROR` (0x01) on failure
-
----
-
-### 5. Send Channel Message
-
-**Purpose**: Send a text message to a channel.
-
-**Command Format**:
-```
-Byte 0: 0x03
-Byte 1: 0x00
-Byte 2: Channel Index (0-7)
-Bytes 3-6: Timestamp (32-bit little-endian Unix timestamp, seconds)
-Bytes 7+: Message Text (UTF-8, variable length)
-```
-
-**Timestamp**: Unix timestamp in seconds (32-bit unsigned integer, little-endian)
-
-**Example** (send "Hello" to channel 1 at timestamp 1234567890):
-```
-03 00 01 D2 02 96 49 48 65 6C 6C 6F
-```
-
-**Response**: `PACKET_MSG_SENT` (0x06) on success
-
----
-
-### 6. Get Message
-
-**Purpose**: Request the next queued message from the device.
-
-**Command Format**:
-```
-Byte 0: 0x0A
-```
-
-**Example** (hex):
-```
-0A
-```
-
-**Response**: 
-- `PACKET_CHANNEL_MSG_RECV` (0x08) or `PACKET_CHANNEL_MSG_RECV_V3` (0x11) for channel messages
-- `PACKET_CONTACT_MSG_RECV` (0x07) or `PACKET_CONTACT_MSG_RECV_V3` (0x10) for contact messages
-- `PACKET_NO_MORE_MSGS` (0x0A) if no messages available
-
-**Note**: Poll this command periodically to retrieve queued messages. The device may also send `PACKET_MESSAGES_WAITING` (0x83) as a notification when messages are available.
+| Code | Name | Purpose |
+|------|------|---------|
+| 0x80 | PUSH_CODE_ADVERT | New advertisement received |
+| 0x81 | PUSH_CODE_PATH_UPDATED | Path to contact changed |
+| 0x82 | PUSH_CODE_SEND_CONFIRMED | Message delivery confirmed (with round-trip time) |
+| 0x83 | PUSH_CODE_MSG_WAITING | New message available to sync |
+| 0x84 | PUSH_CODE_RAW_DATA | Raw data received with SNR/RSSI |
+| 0x85 | PUSH_CODE_LOGIN_SUCCESS | Login request successful |
+| 0x86 | PUSH_CODE_LOGIN_FAIL | Login request failed |
+| 0x87 | PUSH_CODE_STATUS_RESPONSE | Status response received |
+| 0x88 | PUSH_CODE_LOG_RX_DATA | Log/debug data from RX |
+| 0x89 | PUSH_CODE_TRACE_DATA | Path trace data |
+| 0x8A | PUSH_CODE_NEW_ADVERT | New contact advertisement (full record) |
+| 0x8B | PUSH_CODE_TELEMETRY_RESPONSE | Telemetry data received |
+| 0x8C | PUSH_CODE_BINARY_RESPONSE | Binary response to earlier request |
+| 0x8D | PUSH_CODE_PATH_DISCOVERY_RESPONSE | Path discovery response |
+| 0x8E | PUSH_CODE_CONTROL_DATA | Control data received |
+| 0x8F | PUSH_CODE_CONTACT_DELETED | Contact deleted on device |
+| 0x90 | PUSH_CODE_CONTACTS_FULL | Contact table is full |
 
 ---
 
-### 7. Get Battery and Storage
+## Startup Sequence
 
-**Purpose**: Query device battery voltage and storage usage.
+**Recommended for all apps**:
 
-**Command Format**:
-```
-Byte 0: 0x14
-```
+1. **Connect**: Establish BLE connection, discover services, enable TX notifications
+2. **Identify**: Send `CMD_APP_START` with your app name
+3. **Negotiate**: Send `CMD_DEVICE_QUERY` to learn device capabilities and protocol version
+4. **Sync Time**: Send `CMD_SET_DEVICE_TIME` with current Unix timestamp
+5. **Load Contacts**: Send `CMD_GET_CONTACTS` to fetch full contact list
+6. **Load Channels**: Send `CMD_GET_CHANNEL` for each channel index (typically 0–7)
+7. **Drain Queue**: Send `CMD_SYNC_NEXT_MESSAGE` repeatedly until `RESP_CODE_NO_MORE_MESSAGES`
+8. **Wait for Push**: Now listen for async push notifications
 
-**Example** (hex):
-```
-14
-```
-
-**Response**: `PACKET_BATTERY` (0x0C) with battery millivolts and storage information
-
----
-
-## Channel Management
-
-### Channel Types
-
-1. **Public Channel**
-    - Uses a publicly known 16-byte key: `8b3387e9c5cdea6ac9e5edbaa115cd72`
-    - Anyone can join this channel, messages should be considered public
-    - Used as the default public group chat
-2. **Hashtag Channels**
-    - Uses a secret key derived from the channel name
-    - It is the first 16 bytes of `sha256("#test")`
-    - For example hashtag channel `#test` has the key: `9cd8fcf22a47333b591d96a2b848b73f`
-    - Used as a topic based public group chat, separate from the default public channel
-3. **Private Channels**
-    - Uses a randomly generated 16-byte secret key
-    - Messages should be considered private between those that know the secret
-    - Users should keep the key secret, and only share with those you want to communicate with
-    - Used as a secure private group chat
-
-### Channel Lifecycle
-
-1. **Set Channel**:
-    - Fetch all channel slots, and find one with empty name and all-zero secret
-    - Generate or provide a 16-byte secret
-    - Send `CMD_SET_CHANNEL` with name and a 16-byte secret
-2. **Get Channel**:
-    - Send `CMD_GET_CHANNEL` with channel index
-    - Parse `RESP_CODE_CHANNEL_INFO` response
-3. **Delete Channel**:
-    - Send `CMD_SET_CHANNEL` with empty name and all-zero secret
-    - Or overwrite with a new channel
+See [Bluetooth Data Endpoints](./bluetooth_data_endpoints.md#8-minimal-startup-sequence-recommended) for detailed payload examples.
 
 ---
 
-## Message Handling
+## Implementation Guidelines
 
-### Receiving Messages
+### Command Sequencing
 
-Messages are received via the TX characteristic (notifications). The device sends:
+**Critical**: Send only one command at a time.
 
-1. **Channel Messages**:
-   - `PACKET_CHANNEL_MSG_RECV` (0x08) - Standard format
-   - `PACKET_CHANNEL_MSG_RECV_V3` (0x11) - Version 3 with SNR
+1. Send command via RX characteristic
+2. Wait for response (5-second timeout recommended)
+3. Handle all response frames (some commands send multiple frames)
+4. Only then send next command
 
-2. **Contact Messages**:
-   - `PACKET_CONTACT_MSG_RECV` (0x07) - Standard format
-   - `PACKET_CONTACT_MSG_RECV_V3` (0x10) - Version 3 with SNR
+✓ **Correct**: Sequential command queue with one in-flight command
 
-3. **Notifications**:
-   - `PACKET_MESSAGES_WAITING` (0x83) - Indicates messages are queued
-
-### Contact Message Format
-
-**Standard Format** (`PACKET_CONTACT_MSG_RECV`, 0x07):
 ```
-Byte 0: 0x07 (packet type)
-Bytes 1-6: Public Key Prefix (6 bytes, hex)
-Byte 7: Path Length
-Byte 8: Text Type
-Bytes 9-12: Timestamp (32-bit little-endian)
-Bytes 13-16: Signature (4 bytes, only if txt_type == 2)
-Bytes 17+: Message Text (UTF-8)
+1. Send CMD_GET_CONTACTS
+2. Receive RESP_CODE_CONTACTS_START + multiple RESP_CODE_CONTACT + RESP_CODE_END_OF_CONTACTS
+3. Send next command
 ```
 
-**V3 Format** (`PACKET_CONTACT_MSG_RECV_V3`, 0x10):
+✗ **Wrong**: Sending multiple commands before first completes
+
 ```
-Byte 0: 0x10 (packet type)
-Byte 1: SNR (signed byte, multiplied by 4)
-Bytes 2-3: Reserved
-Bytes 4-9: Public Key Prefix (6 bytes, hex)
-Byte 10: Path Length
-Byte 11: Text Type
-Bytes 12-15: Timestamp (32-bit little-endian)
-Bytes 16-19: Signature (4 bytes, only if txt_type == 2)
-Bytes 20+: Message Text (UTF-8)
+1. Send CMD_GET_DEVICE_TIME
+2. Send CMD_GET_CONTACTS (while waiting for device time response!)
 ```
 
-**Parsing Pseudocode**:
-```python
-def parse_contact_message(data):
-    packet_type = data[0]
-    offset = 1
-    
-    # Check for V3 format
-    if packet_type == 0x10:  # V3
-        snr_byte = data[offset]
-        snr = ((snr_byte if snr_byte < 128 else snr_byte - 256) / 4.0)
-        offset += 3  # Skip SNR + reserved
-    
-    pubkey_prefix = data[offset:offset+6].hex()
-    offset += 6
-    
-    path_len = data[offset]
-    txt_type = data[offset + 1]
-    offset += 2
-    
-    timestamp = int.from_bytes(data[offset:offset+4], 'little')
-    offset += 4
-    
-    # If txt_type == 2, skip 4-byte signature
-    if txt_type == 2:
-        offset += 4
-    
-    message = data[offset:].decode('utf-8')
-    
-    return {
-        'pubkey_prefix': pubkey_prefix,
-        'path_len': path_len,
-        'txt_type': txt_type,
-        'timestamp': timestamp,
-        'message': message,
-        'snr': snr if packet_type == 0x10 else None
-    }
-```
+### Response Matching
 
-### Channel Message Format
+- Use the response code (0x00–0x1A) to identify which command was replied to
+- Some commands expect multiple response frames (e.g., `CMD_GET_CONTACTS` → 1+ `RESP_CODE_CONTACT` frames)
+- Track pending commands and match responses by type
 
-**Standard Format** (`PACKET_CHANNEL_MSG_RECV`, 0x08):
-```
-Byte 0: 0x08 (packet type)
-Byte 1: Channel Index (0-7)
-Byte 2: Path Length
-Byte 3: Text Type
-Bytes 4-7: Timestamp (32-bit little-endian)
-Bytes 8+: Message Text (UTF-8)
-```
+### Async Push Handling
 
-**V3 Format** (`PACKET_CHANNEL_MSG_RECV_V3`, 0x11):
-```
-Byte 0: 0x11 (packet type)
-Byte 1: SNR (signed byte, multiplied by 4)
-Bytes 2-3: Reserved
-Byte 4: Channel Index (0-7)
-Byte 5: Path Length
-Byte 6: Text Type
-Bytes 7-10: Timestamp (32-bit little-endian)
-Bytes 11+: Message Text (UTF-8)
-```
+- Pushes (0x80–0x90) can arrive at any time, even while waiting for response
+- Handle pushes in parallel: buffer them, don't block on the command response
+- Example: `PUSH_CODE_MSG_WAITING` while processing contact list
 
-**Parsing Pseudocode**:
-```python
-def parse_channel_message(data):
-    packet_type = data[0]
-    offset = 1
-    
-    # Check for V3 format
-    if packet_type == 0x11:  # V3
-        snr_byte = data[offset]
-        snr = ((snr_byte if snr_byte < 128 else snr_byte - 256) / 4.0)
-        offset += 3  # Skip SNR + reserved
-    
-    channel_idx = data[offset]
-    path_len = data[offset + 1]
-    txt_type = data[offset + 2]
-    timestamp = int.from_bytes(data[offset+3:offset+7], 'little')
-    message = data[offset+7:].decode('utf-8')
-    
-    return {
-        'channel_idx': channel_idx,
-        'timestamp': timestamp,
-        'message': message,
-        'snr': snr if packet_type == 0x11 else None
-    }
-```
+### Message Format Versions
 
-### Sending Messages
+- **V3 Messages** (0x10–0x11): Include 3-byte SNR header; support protocol version 3+
+- **Legacy Messages** (0x07–0x08): No SNR header; for backward compatibility
 
-Use the `SEND_CHANNEL_MESSAGE` command (see [Commands](#commands)).
+Detect device version from `RESP_CODE_DEVICE_INFO` byte 1 to choose parsing strategy.
 
-**Important**: 
-- Messages are limited to 133 characters per MeshCore specification
-- Long messages should be split into chunks
-- Include a chunk indicator (e.g., "[1/3] message text")
+### Frame Size Constraints
+
+- Maximum frame: 172 bytes
+- Larger commands like `SET_CHANNEL` (50 bytes) must fit within this
+- Text payloads are naturally length-limited by frame size
+
+### Error Handling
+
+When receiving `RESP_CODE_ERR` (0x01):
+- Byte 1 contains error code (0x01–0x06)
+- Log error, abandon current command
+- Resume with next command in queue
+- Do NOT retry immediately; implement backoff for persistent errors
 
 ---
 
-## Response Parsing
+## Troubleshooting
 
-### Packet Types
+### Device Disconnects After Inactivity
 
-| Value | Name                       | Description                   |
-|-------|----------------------------|-------------------------------|
-| 0x00  | PACKET_OK                  | Command succeeded             |
-| 0x01  | PACKET_ERROR               | Command failed                |
-| 0x02  | PACKET_CONTACT_START       | Start of contact list         |
-| 0x03  | PACKET_CONTACT             | Contact information           |
-| 0x04  | PACKET_CONTACT_END         | End of contact list           |
-| 0x05  | PACKET_SELF_INFO           | Device self-information       |
-| 0x06  | PACKET_MSG_SENT            | Message sent confirmation     |
-| 0x07  | PACKET_CONTACT_MSG_RECV    | Contact message (standard)    |
+**Symptom**: Connection lost after 5–10 minutes of no activity
+
+**Solution**: Implement periodic "keep-alive" commands such as `CMD_GET_DEVICE_TIME` every few minutes
+
+### Writes Appear to Fail (MTU Issue)
+
+**Symptom**: Large write (e.g., `SET_CHANNEL`, 50+ bytes) fails silently
+
+**Solution**: Request larger MTU (512 bytes) before sending large commands
+- Android: `gatt.requestMtu(512)`
+- iOS: Check `maximumWriteValueLength(for:)`
+- Web Bluetooth: Typically 512 automatically
+
+### Response Timeout or Hangs
+
+**Symptom**: Send command, never receive response
+
+**Solution**:
+1. Verify device is still connected (check connection state callbacks)
+2. Check TX characteristic notifications are enabled
+3. Verify command format matches protocol (correct byte 0, payload structure)
+4. Increase timeout to 10 seconds (some operations slow)
+5. Reboot device or reconnect
+
+### Device Reports "Command Not Supported"
+
+**Symptom**: `RESP_CODE_ERR` with code 0x01 (unsupported)
+
+**Solution**: Check if feature is compile-time gated (e.g., `CMD_EXPORT_PRIVATE_KEY`). Query `RESP_CODE_DEVICE_INFO` or check [Bluetooth Data Endpoints](./bluetooth_data_endpoints.md#3-app--device-command-endpoints) status column.
+
+### Garbled Messages or Parse Errors
+
+**Symptom**: Text appears corrupted or parser crashes
+
+**Solution**:
+1. Verify UTF-8 decoding; confirm message byte after timestamp
+2. Check V3 vs. legacy message format (field 1 byte 1 may be SNR value in V3)
+3. Ensure little-endian integer parsing for timestamps and coordinates
+
+For more details on message structure, see [Bluetooth Data Endpoints](./bluetooth_data_endpoints.md#6-binary-schemas).
+
+
+## Related Documents
+
+- **[Bluetooth Data Endpoints](./bluetooth_data_endpoints.md)**: Complete binary field layouts, schemas, all command/response payloads
+- **[Packet Format](./packet_format.md)**: Mesh radio packet structure (not BLE-specific)
+- **[KISS Modem Protocol](./kiss_modem_protocol.md)**: Serial modem protocol for older interfaces
+
+## Additional Resources
+
+- **Source Code Reference**: `examples/companion_radio/MyMesh.cpp` (command handler with all endpoint definitions)
+- **BLE Implementation**: `src/helpers/{nrf52,esp32}/SerialBLEInterface.cpp`
+- **Live SDKs**: JavaScript, Python repos linked at top of this document
+
 | 0x08  | PACKET_CHANNEL_MSG_RECV    | Channel message (standard)    |
 | 0x09  | PACKET_CURRENT_TIME        | Current time response         |
 | 0x0A  | PACKET_NO_MORE_MSGS        | No more messages available    |
