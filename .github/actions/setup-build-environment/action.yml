@@ -22,8 +22,13 @@ runs:
         pip install --upgrade platformio
 
     # a git tag of "room-server-v1.2.3" should set "v1.2.3" as GIT_TAG_VERSION
+    # for non-tag triggers (e.g. workflow_dispatch), fall back to "dev"
     - name: Extract Version from Git Tag
       shell: bash
       run: |
-        GIT_TAG_NAME="${GITHUB_REF#refs/tags/}"
-        echo "GIT_TAG_VERSION=${GIT_TAG_NAME##*-}" >> $GITHUB_ENV
+        if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+          GIT_TAG_NAME="${GITHUB_REF#refs/tags/}"
+          echo "GIT_TAG_VERSION=${GIT_TAG_NAME##*-}" >> $GITHUB_ENV
+        else
+          echo "GIT_TAG_VERSION=dev" >> $GITHUB_ENV
+        fi

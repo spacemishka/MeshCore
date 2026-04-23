@@ -1,13 +1,15 @@
-name: Build Room Server Firmwares
+name: Build ThinkNode M1 Companion Firmwares
 
 permissions:
   contents: write
 
 on:
+  release:
+    types: [created, published]
   workflow_dispatch:
   push:
     tags:
-      - 'room-server-*'
+      - 'thinknode-m1-companion-*'
 
 jobs:
 
@@ -24,19 +26,19 @@ jobs:
       - name: Build Firmwares
         env:
           FIRMWARE_VERSION: ${{ env.GIT_TAG_VERSION }}
-        run: /usr/bin/env bash build.sh build-room-server-firmwares
+        run: /usr/bin/env bash build.sh build-matching-firmwares ThinkNode_M1_companion
 
       - name: Upload Workflow Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: room-server-firmwares
+          name: thinknode-m1-companion-firmwares
           path: out
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          name: Room Server Firmware ${{ env.GIT_TAG_VERSION }}
+          name: ThinkNode M1 Companion Firmware ${{ env.GIT_TAG_VERSION }}
           body: ""
           draft: true
           files: out/*
