@@ -5,10 +5,9 @@
 
 #include <Arduino.h>
 #include <bluefruit.h>
-#include "ThinkNodeM1Board.h"
+#include "target.h"
 
 BLEUart bleuart;
-ThinkNodeM1Board board;
 
 #define CMD_BUFFER_SIZE 128
 char cmd_buffer[CMD_BUFFER_SIZE];

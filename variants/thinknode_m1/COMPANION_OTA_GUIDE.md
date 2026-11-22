@@ -25,20 +25,20 @@ This firmware variant combines the full functionality of the ThinkNode M1 BLE Co
 
 ```powershell
 # From the MeshCore root directory
-pio run -e ThinkNode_M1_companion_ota
+pio run -e ThinkNode_M1_companion_radio_ble
 ```
 
 ### Flashing via USB
 
 ```powershell
-pio run -e ThinkNode_M1_companion_ota -t upload
+pio run -e ThinkNode_M1_companion_radio_ble -t upload
 ```
 
 ## Usage
 
 ### Initial Setup
 
-1. Flash the companion_ota firmware to your ThinkNode M1
+1. Flash the companion (BLE) firmware to your ThinkNode M1
 2. Power on the device
 3. Connect via BLE using your companion app (use PIN: 123456)
 4. Use the device normally for messaging, GPS, etc.
@@ -119,26 +119,22 @@ nrfutil pkg generate --hw-version 52 --sd-req 0xCB --application-version 1 --app
 
 ### Build Configuration
 
-The `ThinkNode_M1_companion_ota` build target is configured in `platformio.ini`:
+The `ThinkNode_M1_companion_radio_ble` build target is configured in `platformio.ini`:
 
 ```ini
-[env:ThinkNode_M1_companion_ota]
+[env:ThinkNode_M1_companion_radio_ble]
 extends = ThinkNode_M1
-board_build.ldscript = boards/nrf52840_s140_v6_extrafs.ld
 build_flags =
   ${ThinkNode_M1.build_flags}
-  -D USER_BTN_PRESSED=LOW
   -D BLE_PIN_CODE=123456
+  -D UI_HAS_OTA_MENU=1
+  -D DISPLAY_CLASS=GxEPDDisplay
   ...other flags...
-build_src_filter = 
-  -<../examples/companion_radio/main.cpp>
-  +<companion_with_ota.cpp>
 ```
 
-Key differences from standard companion:
-- Uses `companion_with_ota.cpp` instead of standard companion main.cpp
-- Adds button monitoring code to the main loop
-- Includes serial output for OTA trigger feedback
+The OTA menu lives in the shared companion UI (`examples/companion_radio/ui-new/UITask.cpp`),
+gated by `UI_HAS_OTA_MENU`. `board.startOTAUpdate()` writes the DFU magic to GPREGRET and
+resets into the Adafruit bootloader.
 
 ## Troubleshooting
 
@@ -172,15 +168,15 @@ Key differences from standard companion:
 
 | Firmware Variant | OTA Trigger | CLI Access | Companion Features | Configuration |
 |-----------------|-------------|------------|-------------------|--------------|
-| **companion_ota** | ✅ Button (5s hold) | ❌ No | ✅ Full | ✅ Stable |
-| ble_cli | ✅ CLI command | ✅ BLE CLI | ❌ No companion | ⚠️ Config issues |
+| **companion_radio_ble** | ✅ Button / OTA page | ❌ No | ✅ Full | ✅ Stable |
+| ble_cli | ✅ CLI command | ✅ BLE CLI | ❌ No companion | ✅ Stable |
 | repeater | ✅ CLI command | ✅ USB CLI | ❌ No companion | ✅ Stable |
-| companion_ble | ❌ No OTA | ❌ No | ✅ Full | ✅ Stable |
 
 ## Source Code
 
 The firmware is implemented in:
-- `variants/thinknode_m1/companion_with_ota.cpp` - Main firmware file
+- `examples/companion_radio/main.cpp` - Main firmware file
+- `examples/companion_radio/ui-new/UITask.cpp` - OTA menu (`UI_HAS_OTA_MENU`)
 - `variants/thinknode_m1/platformio.ini` - Build configuration
 
 ## License
